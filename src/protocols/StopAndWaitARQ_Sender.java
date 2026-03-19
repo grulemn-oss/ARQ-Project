@@ -1,5 +1,6 @@
 package protocols;
 
+import java.io.IOException;
 import java.util.List;
 
 public class StopAndWaitARQ_Sender {
@@ -13,7 +14,7 @@ public class StopAndWaitARQ_Sender {
         this.currSeqNumber = 0;
     }
 
-    public void transmit(List<BISYNCPacket> packets){
+    public void transmit(List<BISYNCPacket> packets) {
         for (int i = 0; i < packets.size(); i++) {
             BISYNCPacket packet = packets.get(i);
             boolean packetReceived = false;
@@ -21,7 +22,13 @@ public class StopAndWaitARQ_Sender {
 
             // TODO: Task 2.a, Your code below
             // notice: use sender.sendPacketWithError() to send out packet
-
+            try {
+                while(!packetReceived)
+                sender.sendPacketWithError(packet, currSeqNumber, isLastPacket);
+                packetReceived = ACK == sender.waitForResponse()[0];
+            } catch (IOException e) {
+                System.err.println(e);
+            }
         }
     }
 
