@@ -1,5 +1,7 @@
 package protocols;
 
+import java.util.ArrayList;
+
 public class BISYNCPacket {
     private static final byte SYN = 0x16;  // SYNC character
     private static final byte STX = 0x02;  // Start of Text
@@ -37,8 +39,24 @@ public class BISYNCPacket {
     // output : stuffed data
         // e.g. stuffed data has 8 bytes with 3 extra DLE: 0x01 DLE STX 0x02 DLE SYN DLE DLE
     private byte[] byteStuff(byte[] data) {
-        // TODO: Task 1.a, your code below
-        byte[] stuffed = new byte[1];
+        int count = data.length;
+
+        for (int i = 0; i < data.length; i++) {
+            if (data[i] == SYN || data[i] == STX || data[i] == ETX || data[i] == DLE) {
+                count++;
+            }
+        }
+
+        byte[] stuffed = new byte[count];
+        int j = 0;
+
+        for (int i = 0; i < data.length; i++) {
+            if (data[i] == SYN || data[i] == STX || data[i] == ETX || data[i] == DLE) {
+                stuffed[j++] = DLE;
+            }
+            stuffed[j++] = data[i];
+        }
+
         return stuffed;
     }
 
@@ -47,8 +65,29 @@ public class BISYNCPacket {
     // output : raw data
     // e.g. raw data has 5 bytes with 3 special bytes: 0x01 STX 0x02 SYN DLE
     private byte[] byteUnstuff(byte[] stuffedData) {
-        // TODO: Task 1.b, your code below
-        byte[] unstuffed = new byte[1];
+        int count = stuffedData.length;
+        for (int i = 0; i < stuffedData.length - 1; i++) {
+            if (stuffedData[i] == DLE && (stuffedData[i + 1] == SYN || stuffedData[i + 1] == STX 
+                || stuffedData[i + 1] == ETX || stuffedData[i + 1] == DLE)) {
+                count--;
+                i++;
+            }
+        }
+
+        byte[] unstuffed = new byte[count];
+        int j = 0;
+
+        for (int i = 0; i < stuffedData.length - 1; i++) {
+            if (stuffedData[i] == DLE && (stuffedData[i + 1] == SYN || stuffedData[i + 1] == STX 
+                || stuffedData[i + 1] == ETX || stuffedData[i + 1] == DLE)) {
+                unstuffed[j] = stuffedData[i];
+                i++;
+            } else {
+                unstuffed[j] = stuffedData[i];
+            }
+            j++;
+        }
+
         return unstuffed;
     }
 
