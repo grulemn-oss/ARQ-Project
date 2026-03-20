@@ -54,10 +54,17 @@ public class StopAndWaitARQ_Receiver {
                 BISYNCPacket packet = new BISYNCPacket(packetData, true);
 
                 // TODO: Task 2.b, Your code below
-
-
-
-
+                if (packet.isValid) {
+                    receivedData.add(packetData);
+                    out.writeChar(ACK);
+                    out.writeChar((char)(((int)(packetIndex)+1)%256));
+                } else {
+                    out.writeChar(NAK);
+                    out.writeChar(packetIndex);
+                }
+                if (isLastPacket) {
+                    running = false;
+                }
             } catch (IOException e) {
                 if (running) {
                     System.err.println("Error handling client: " + e.getMessage());
