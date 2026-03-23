@@ -9,7 +9,7 @@ public class StopAndWaitARQ_Sender {
     private final NetworkSender sender;
     private char currSeqNumber = 0; // 0 - 255
 
-    public StopAndWaitARQ_Sender(NetworkSender sender){
+    public StopAndWaitARQ_Sender(NetworkSender sender) {
         this.sender = sender;
         this.currSeqNumber = 0;
     }
@@ -23,12 +23,12 @@ public class StopAndWaitARQ_Sender {
             // TODO: Task 2.a, Your code below
             // notice: use sender.sendPacketWithError() to send out packet
             try {
-                while(!packetReceived) {
+                while (!packetReceived) {
                     sender.sendPacketWithError(packet, currSeqNumber, isLastPacket);
                     packetReceived = ACK == sender.waitForResponse()[0];
                 }
                 if (currSeqNumber != 255) {
-                    currSeqNumber = (char)((int)(currSeqNumber) + 1);
+                    currSeqNumber = (char) ((int) (currSeqNumber) + 1);
                 } else {
                     currSeqNumber = 0;
                 }

@@ -15,7 +15,7 @@ public class StopAndWaitARQ_Receiver {
     private static final byte ACK = 0x06; // ACK
     private static final byte NAK = 0X21; // NAK
     private static final char MAX_SEQ_NUM = 255;
-    private static final char TOTAL_SEQ_NUM = (MAX_SEQ_NUM+1);
+    private static final char TOTAL_SEQ_NUM = (MAX_SEQ_NUM + 1);
     private final int port;
     private final String outputFile;
     private ServerSocket serverSocket;
@@ -42,7 +42,7 @@ public class StopAndWaitARQ_Receiver {
         DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
 
         while (running) {
-            try{
+            try {
                 // Read packet metadata
                 int packetLength = in.readInt();
                 char packetIndex = in.readChar();
@@ -52,17 +52,21 @@ public class StopAndWaitARQ_Receiver {
                 byte[] packetData = new byte[packetLength];
                 in.readFully(packetData);
                 BISYNCPacket packet = new BISYNCPacket(packetData, true);
-
+                System.out.println("code ran");
                 // TODO: Task 2.b, Your code below
                 if (packet.isValid) {
+                    System.out.println(packet.isValid);
                     receivedData.add(packetData);
+                    System.out.println("sendPacket number: " + packetIndex);
                     out.writeChar(ACK);
-                    out.writeChar((char)(((int)(packetIndex)+1)%256));
+                    out.writeChar((char) (((int) (packetIndex) + 1) % 256));
+                    System.out.println("Packet " + packetIndex + "successfully transmitted ACK number: " + (char) (((int) (packetIndex) + 1) % 256));
                 } else {
                     out.writeChar(NAK);
                     out.writeChar(packetIndex);
                 }
                 if (isLastPacket) {
+                    System.out.println("last");
                     running = false;
                 }
             } catch (IOException e) {
@@ -73,6 +77,7 @@ public class StopAndWaitARQ_Receiver {
         }
 
         // after receive all the packets, save them into the output file
+        System.out.println("Receiver stopped");
         saveFile();
 
     }
