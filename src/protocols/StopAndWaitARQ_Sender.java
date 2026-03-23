@@ -30,11 +30,7 @@ public class StopAndWaitARQ_Sender {
                     packetReceived = ACK == (int)(response[0]);
                     System.out.println("Packet " + i + " successfully transmitted ACK number: " + (int)(response[1]));
                 }
-                if (currSeqNumber != 255) {
-                    currSeqNumber = (char) ((int) (currSeqNumber) + 1);
-                } else {
-                    currSeqNumber = 0;
-                }
+                currSeqNumber = (char) (((int) (currSeqNumber) + 1) % 256);
             } catch (IOException e) {
                 System.err.println(e);
             }

@@ -56,7 +56,6 @@ public class StopAndWaitARQ_Receiver {
                 // TODO: Task 2.b, Your code below
                 if (packet.isValid) {
                     receivedData.add(packetData);
-                    totalPacketsReceived++;
                     out.writeChar(ACK);
                     out.writeChar((char)(((int)(packetIndex)+1)%256));
                 } else {
