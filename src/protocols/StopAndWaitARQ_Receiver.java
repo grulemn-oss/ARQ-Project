@@ -52,21 +52,18 @@ public class StopAndWaitARQ_Receiver {
                 byte[] packetData = new byte[packetLength];
                 in.readFully(packetData);
                 BISYNCPacket packet = new BISYNCPacket(packetData, true);
-                System.out.println("code ran");
+
                 // TODO: Task 2.b, Your code below
                 if (packet.isValid) {
-                    System.out.println(packet.isValid);
                     receivedData.add(packetData);
-                    System.out.println("sendPacket number: " + packetIndex);
+                    totalPacketsReceived++;
                     out.writeChar(ACK);
-                    out.writeChar((char) (((int) (packetIndex) + 1) % 256));
-                    System.out.println("Packet " + packetIndex + "successfully transmitted ACK number: " + (char) (((int) (packetIndex) + 1) % 256));
+                    out.writeChar((char)(((int)(packetIndex)+1)%256));
                 } else {
                     out.writeChar(NAK);
-                    out.writeChar(packetIndex);
+                    out.writeChar((int)(packetIndex));
                 }
                 if (isLastPacket) {
-                    System.out.println("last");
                     running = false;
                 }
             } catch (IOException e) {
@@ -77,7 +74,6 @@ public class StopAndWaitARQ_Receiver {
         }
 
         // after receive all the packets, save them into the output file
-        System.out.println("Receiver stopped");
         saveFile();
 
     }

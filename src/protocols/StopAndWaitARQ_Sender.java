@@ -24,8 +24,11 @@ public class StopAndWaitARQ_Sender {
             // notice: use sender.sendPacketWithError() to send out packet
             try {
                 while (!packetReceived) {
+                    System.out.println("sendPacket number: " + (int)(currSeqNumber));
                     sender.sendPacketWithError(packet, currSeqNumber, isLastPacket);
-                    packetReceived = ACK == sender.waitForResponse()[0];
+                    char[] response = sender.waitForResponse();
+                    packetReceived = ACK == (int)(response[0]);
+                    System.out.println("Packet " + i + " successfully transmitted ACK number: " + (int)(response[1]));
                 }
                 if (currSeqNumber != 255) {
                     currSeqNumber = (char) ((int) (currSeqNumber) + 1);
