@@ -81,7 +81,7 @@ public class BISYNCPacket {
         for (int i = 0; i < stuffedData.length - 1; i++) {
             if (stuffedData[i] == DLE && (stuffedData[i + 1] == SYN || stuffedData[i + 1] == STX
                     || stuffedData[i + 1] == ETX || stuffedData[i + 1] == DLE)) {
-                unstuffed[j] = stuffedData[i];
+                unstuffed[j] = stuffedData[i + 1];
                 i++;
             } else {
                 unstuffed[j] = stuffedData[i];

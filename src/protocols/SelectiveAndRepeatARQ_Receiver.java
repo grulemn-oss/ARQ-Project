@@ -77,8 +77,41 @@ public class SelectiveAndRepeatARQ_Receiver {
                 BISYNCPacket packet = new BISYNCPacket(packetData, true);
 
                 // TODO: Task 3.b, Your code below
-
-
+                if ((int)(packetIndex) == winBase) {
+                    for (int i = 0; i < winSize; i++) {
+                        if (packet.isValid) {
+                            receivedData.add(packetData);
+                            out.writeChar(ACK);
+                            out.writeChar((char) (((int) (packetIndex) + 1) % 256));
+                            System.out.println("ACK " + ((int) (packetIndex) + 1) % 256);
+                            winBase++;
+                        } else {
+                            out.writeChar(NAK);
+                            out.writeChar((int) (packetIndex));
+                            System.out.println("NAK " + (int) (packetIndex));
+                        }
+                        if (isLastPacket) {
+                            running = false;
+                        }
+                    }
+                } else {
+                    for (int i = 1; i <= (int)(packetIndex) - winBase; i++) {
+                        out.writeChar(NAK);
+                        out.writeChar(winBase + i);
+                        System.out.println("NAK " + (winBase + i));
+                    }
+                    if (packet.isValid) {
+                        receivedData.add(packetData);
+                        out.writeChar(ACK);
+                        out.writeChar((char)(((int)(packetIndex)+1)%256));
+                        System.out.println("ACK " + ((int)(packetIndex)+1)%256);
+                        winBase++;
+                    } else {
+                        out.writeChar(NAK);
+                        out.writeChar((int)(packetIndex));
+                        System.out.println("NAK " + (int)(packetIndex));
+                    }
+                }
             } catch (IOException e) {
                 if (running) {
                     System.err.println("Error handling client: " + e.getMessage());
