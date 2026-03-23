@@ -16,7 +16,7 @@ public class SelectiveAndRepeatARQ_Receiver {
     private static final byte ACK = 0x06; // ACK
     private static final byte NAK = 0X21; // NAK
     private static final char MAX_SEQ_NUM = 255;
-    private static final char TOTAL_SEQ_NUM = (MAX_SEQ_NUM+1);
+    private static final char TOTAL_SEQ_NUM = (MAX_SEQ_NUM + 1);
     private final int port;
     private final String outputFile;
     private ServerSocket serverSocket;
@@ -24,7 +24,7 @@ public class SelectiveAndRepeatARQ_Receiver {
     private final List<byte[]> receivedData;
     private int totalPacketsReceived;
 
-    public SelectiveAndRepeatARQ_Receiver(int port, int winSize, String outputFile){
+    public SelectiveAndRepeatARQ_Receiver(int port, int winSize, String outputFile) {
         this.port = port;
         this.outputFile = outputFile;
         this.running = false;
@@ -57,19 +57,19 @@ public class SelectiveAndRepeatARQ_Receiver {
         int winBase = 0;
         System.out.println("Receiver handshake, N: " + N + " winSize: " + winSize);
         Boolean[] flags = new Boolean[N]; // flags[i] indicate whether the packet i has been received
-        for(int i=0; i<N; i++) {
+        for (int i = 0; i < N; i++) {
             flags[i] = false;
         }
         ensureCapacity(N);
 
-        while(running){
-            try{
+        while (running) {
+            try {
                 // Read packet metadata
                 int packetLength = in.readInt();
                 char packetIndex = in.readChar();
                 boolean isLastPacket = in.readBoolean();
 
-                System.out.println("packetIndex : " + (int)(packetIndex) );
+                System.out.println("packetIndex : " + (int) (packetIndex));
 
                 // Read packet data
                 byte[] packetData = new byte[packetLength];
@@ -77,7 +77,6 @@ public class SelectiveAndRepeatARQ_Receiver {
                 BISYNCPacket packet = new BISYNCPacket(packetData, true);
 
                 // TODO: Task 3.b, Your code below
-
 
 
             } catch (IOException e) {
@@ -91,6 +90,7 @@ public class SelectiveAndRepeatARQ_Receiver {
         saveFile();
         stop();
     }
+
     private void saveFile() {
         try {
             // Calculate total size
@@ -118,6 +118,7 @@ public class SelectiveAndRepeatARQ_Receiver {
             System.err.println("Error saving video file: " + e.getMessage());
         }
     }
+
     public void stop() {
         running = false;
         try {

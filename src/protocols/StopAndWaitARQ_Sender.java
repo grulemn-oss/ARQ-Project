@@ -1,5 +1,6 @@
 package protocols;
 
+import java.io.IOException;
 import java.util.List;
 
 public class StopAndWaitARQ_Sender {
@@ -8,12 +9,12 @@ public class StopAndWaitARQ_Sender {
     private final NetworkSender sender;
     private char currSeqNumber = 0; // 0 - 255
 
-    public StopAndWaitARQ_Sender(NetworkSender sender){
+    public StopAndWaitARQ_Sender(NetworkSender sender) {
         this.sender = sender;
         this.currSeqNumber = 0;
     }
 
-    public void transmit(List<BISYNCPacket> packets){
+    public void transmit(List<BISYNCPacket> packets) {
         for (int i = 0; i < packets.size(); i++) {
             BISYNCPacket packet = packets.get(i);
             boolean packetReceived = false;
@@ -21,7 +22,22 @@ public class StopAndWaitARQ_Sender {
 
             // TODO: Task 2.a, Your code below
             // notice: use sender.sendPacketWithError() to send out packet
-
+            try {
+                while (!packetReceived) {
+                    System.out.println("sendPacket number: " + (int)(currSeqNumber));
+                    sender.sendPacketWithError(packet, currSeqNumber, isLastPacket);
+                    char[] response = sender.waitForResponse();
+                    packetReceived = ACK == (int)(response[0]);
+                    System.out.println("Packet " + i + " successfully transmitted ACK number: " + (int)(response[1]));
+                }
+                if (currSeqNumber != 255) {
+                    currSeqNumber = (char) ((int) (currSeqNumber) + 1);
+                } else {
+                    currSeqNumber = 0;
+                }
+            } catch (IOException e) {
+                System.err.println(e);
+            }
         }
     }
 

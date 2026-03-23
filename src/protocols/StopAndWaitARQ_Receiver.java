@@ -15,7 +15,7 @@ public class StopAndWaitARQ_Receiver {
     private static final byte ACK = 0x06; // ACK
     private static final byte NAK = 0X21; // NAK
     private static final char MAX_SEQ_NUM = 255;
-    private static final char TOTAL_SEQ_NUM = (MAX_SEQ_NUM+1);
+    private static final char TOTAL_SEQ_NUM = (MAX_SEQ_NUM + 1);
     private final int port;
     private final String outputFile;
     private ServerSocket serverSocket;
@@ -42,7 +42,7 @@ public class StopAndWaitARQ_Receiver {
         DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
 
         while (running) {
-            try{
+            try {
                 // Read packet metadata
                 int packetLength = in.readInt();
                 char packetIndex = in.readChar();
@@ -54,10 +54,18 @@ public class StopAndWaitARQ_Receiver {
                 BISYNCPacket packet = new BISYNCPacket(packetData, true);
 
                 // TODO: Task 2.b, Your code below
-
-
-
-
+                if (packet.isValid) {
+                    receivedData.add(packetData);
+                    totalPacketsReceived++;
+                    out.writeChar(ACK);
+                    out.writeChar((char)(((int)(packetIndex)+1)%256));
+                } else {
+                    out.writeChar(NAK);
+                    out.writeChar((int)(packetIndex));
+                }
+                if (isLastPacket) {
+                    running = false;
+                }
             } catch (IOException e) {
                 if (running) {
                     System.err.println("Error handling client: " + e.getMessage());
