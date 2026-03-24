@@ -77,39 +77,47 @@ public class SelectiveAndRepeatARQ_Receiver {
                 BISYNCPacket packet = new BISYNCPacket(packetData, true);
 
                 // TODO: Task 3.b, Your code below
-                int numNAKs = 0;
-                if (winBase < (int)(packetIndex) && numNAKs <= 0) {
-                    for (int i = winBase + 1; i <= (int) (packetIndex); i++) {
-                        if (!nak_packets.contains(i)) {
-                            nak_packets.add(i);
-                            out.writeChar(NAK);
-                            out.writeChar(i);
-                            System.out.println("NAK " + i);
-                        }
-                        numNAKs++;
-                        System.out.println(numNAKs);
-                    }
-                } else {
-                    receivedData.add(packetData);
-                    if (winBase == (int)(packetIndex)) {
-                        numNAKs--;
-                        System.out.println(numNAKs);
-                        winBase = Math.max(((int) (packetIndex) + 1), winBase + 1);
+                if (!flags[packetIndex]) {
+                    receivedData.set(packetIndex, packet.getData());
+                    flags[packetIndex] = true;
+                }
+
+                if (packetIndex == winBase) {
+                    while (winBase < N && flags[winBase]) {
+                        winBase++;
                     }
                     out.writeChar(ACK);
-                    out.writeChar((char)((winBase) % 256));
-                    System.out.println("ACK " + (winBase) % 256);
+                    out.writeChar((char)(winBase % 256));
+                    System.out.println("ACK " + winBase % 256 + " (nextExpected=" + winBase + ")");
+
+                } else if (packetIndex > winBase) {
+                    for (int missing = winBase; missing < packetIndex; missing++) {
+                        if (!flags[missing] && !nak_packets.contains(missing)) {
+                            nak_packets.add(missing);
+                            out.writeChar(NAK);
+                            out.writeChar((char) missing);
+                            System.out.println("NAK " + missing);
+                        }
+                    }
+                    out.writeChar(ACK);
+                    out.writeChar((char)(winBase % 256));
                 }
-                if (isLastPacket) {
+
+
+
+                if (isLastPacket && winBase == N) {
                     running = false;
+                } else if (isLastPacket) {
+                    System.out.println("Last packet received but gaps remain; waiting for retransmissions.");
                 }
             } catch (IOException e) {
-                if (running) {
+                if (running && winBase < N) {
                     System.err.println("Error handling client: " + e.getMessage());
+                } else {
+                    running = false; // Just stop the loop quietly
                 }
             }
         }
-        // finish receiving all the data
         System.out.println("receiver: finish receiving all packets, now save into file!");
         saveFile();
         stop();
@@ -154,4 +162,3 @@ public class SelectiveAndRepeatARQ_Receiver {
         }
     }
 }
-
