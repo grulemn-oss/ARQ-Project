@@ -38,7 +38,7 @@ public class SelectiveAndRepeatARQ_Sender {
         Boolean finished = false;
 
         // TODO: Task 3.a, Your code below
-
+        int currSeqNum = 0;
         while (!finished) {
             try {
             // notice: use sender.sendPacketWithLost() to send out packet
@@ -46,37 +46,31 @@ public class SelectiveAndRepeatARQ_Sender {
             // use sender.sendPacket(), otherwise, the receiver may not get the resent packet and get stuck
             // also, for the last packet, use sender.sendPacket(), otherwise, it will get stuck
 
-                int initWinSize = winSize;
-                int loops = 0;
-                // Send Window.
-                for (int i = winBase; i < Math.min(winSize, N); i++) {
-                    char packetIndex = (char)(i);
+                // Send unsent packets from window
+                for (int i = currSeqNum; i < Math.min(winSize + winBase, N); i++) {
                     if (i == packets.size() - 1) {
+                        // Send immune last packet
                         System.out.println("sendPacket number: " + i);
-                        sender.sendPacket(packets.get(i).getPacket(), packetIndex, true);
+                        currSeqNum = i;
+                        sender.sendPacket(packets.get(i).getPacket(), (char)(i), true);
                     } else {
+                        // Send non-immune packet
                         System.out.println("sendPacket number: " + i);
-                        sender.sendPacketWithLost(packets.get(i), packetIndex, false);
+                        currSeqNum = i;
+                        sender.sendPacketWithLost(packets.get(i), (char)(i), false);
                     }
                 }
                 // Check ACKs and NAKS and move window
-                for (int i = winBase; i < winSize; i++) {
-                    response = sender.waitForResponse();
-                    if (ACK == (int)(response[0])) {
-                        System.out.println("Packet " + i + " successfully transmitted ACK number: " + (int)(response[1]));
-                        if (winBase > (int)(response[1])) {
-                            loops++;
-                        }
-                        winBase = (int)(response[1]) + 256*loops + 1;
-                        winSize = initWinSize + (int)(response[1]) + 256*loops + 1;
-                        System.out.println("winBase: " + winBase + " winSize: " + winSize);
-                        if (i == packets.size() - 1) {
-                            finished = true;
-                        }
-                    } else if (NAK == (int)(response[0])) {
-                        System.out.println("sendPacket number: " + i);
-                        sender.sendPacket(packets.get(i).getPacket(), (char)(winBase), false);
+                response = sender.waitForResponse();
+                if (ACK == (int)(response[0])) {
+                    System.out.println("ACK: " + (int)(response[1]));
+                    winBase = (int)(response[1]);
+                    if (winBase == packets.size() - 1) {
+                        finished = true;
                     }
+                } else if (NAK == (int)(response[0])) {
+                    System.out.println("sendPacket number: " + ((int)(response[1])-1) + " NAK: " + (int)(response[1]));
+                    sender.sendPacket(packets.get((int)(response[1])-1).getPacket(), (char)((int)(response[1])-1), false);
                 }
             }catch (IOException e){
                 System.err.println("Error transmitting packet: " + e.getMessage());
