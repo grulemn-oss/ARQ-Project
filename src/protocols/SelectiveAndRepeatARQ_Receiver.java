@@ -78,18 +78,19 @@ public class SelectiveAndRepeatARQ_Receiver {
 
                 // TODO: Task 3.b, Your code below
                 if (winBase < (int)(packetIndex)) {
-                    for (int i = winBase + 1; i <= (int)(packetIndex); i++) {
-                        if (!nak_packets.contains(i)) {
-                            nak_packets.add(i);
-                            out.writeChar(NAK);
-                            out.writeChar(i);
-                            System.out.println("NAK " + i);
+                    if (((int)(packetIndex) + 1) > winBase+1){
+                        for (int i = winBase + 1; i <= (int) (packetIndex); i++) {
+                            if (!nak_packets.contains(i)) {
+                                nak_packets.add(i);
+                                out.writeChar(NAK);
+                                out.writeChar(i);
+                                System.out.println("NAK " + i);
+                            }
                         }
-                        winBase++;
                     }
                 } else {
                     receivedData.add(packetData);
-                    winBase++;
+                    winBase = Math.max(((int)(packetIndex) + 1), winBase);
                     out.writeChar(ACK);
                     out.writeChar((char)((winBase) % 256));
                     System.out.println("ACK " + (winBase) % 256);

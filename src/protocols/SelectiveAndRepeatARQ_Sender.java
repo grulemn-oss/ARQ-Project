@@ -51,12 +51,14 @@ public class SelectiveAndRepeatARQ_Sender {
                     if (i == packets.size() - 1) {
                         // Send immune last packet
                         System.out.println("sendPacket number: " + i);
-                        currSeqNum = i;
+                        currSeqNum++;
+                        System.out.println(currSeqNum);
                         sender.sendPacket(packets.get(i).getPacket(), (char)(i), true);
                     } else {
                         // Send non-immune packet
                         System.out.println("sendPacket number: " + i);
-                        currSeqNum = i;
+                        currSeqNum++;
+                        System.out.println(currSeqNum);
                         sender.sendPacketWithLost(packets.get(i), (char)(i), false);
                     }
                 }
@@ -64,7 +66,8 @@ public class SelectiveAndRepeatARQ_Sender {
                 response = sender.waitForResponse();
                 if (ACK == (int)(response[0])) {
                     System.out.println("ACK: " + (int)(response[1]));
-                    winBase = (int)(response[1]);
+                    winBase++;
+                    System.out.println(currSeqNum);
                     if (winBase == packets.size() - 1) {
                         finished = true;
                     }
