@@ -77,20 +77,25 @@ public class SelectiveAndRepeatARQ_Receiver {
                 BISYNCPacket packet = new BISYNCPacket(packetData, true);
 
                 // TODO: Task 3.b, Your code below
-                if (winBase < (int)(packetIndex)) {
-                    if (((int)(packetIndex) + 1) > winBase+1){
-                        for (int i = winBase + 1; i <= (int) (packetIndex); i++) {
-                            if (!nak_packets.contains(i)) {
-                                nak_packets.add(i);
-                                out.writeChar(NAK);
-                                out.writeChar(i);
-                                System.out.println("NAK " + i);
-                            }
+                int numNAKs = 0;
+                if (winBase < (int)(packetIndex) && numNAKs <= 0) {
+                    for (int i = winBase + 1; i <= (int) (packetIndex); i++) {
+                        if (!nak_packets.contains(i)) {
+                            nak_packets.add(i);
+                            out.writeChar(NAK);
+                            out.writeChar(i);
+                            System.out.println("NAK " + i);
                         }
+                        numNAKs++;
+                        System.out.println(numNAKs);
                     }
                 } else {
                     receivedData.add(packetData);
-                    winBase = Math.max(((int)(packetIndex) + 1), winBase);
+                    if (winBase == (int)(packetIndex)) {
+                        numNAKs--;
+                        System.out.println(numNAKs);
+                        winBase = Math.max(((int) (packetIndex) + 1), winBase + 1);
+                    }
                     out.writeChar(ACK);
                     out.writeChar((char)((winBase) % 256));
                     System.out.println("ACK " + (winBase) % 256);
