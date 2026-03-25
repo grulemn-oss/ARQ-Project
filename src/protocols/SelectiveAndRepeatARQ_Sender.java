@@ -38,7 +38,7 @@ public class SelectiveAndRepeatARQ_Sender {
 
         Boolean finished = false;
 
-        // TODO: Task 3.a, Your code below
+//         TODO: Task 3.a, Your code below
         int nextToSend = 0;
 
         while (winBase < N) { //vital
@@ -47,13 +47,13 @@ public class SelectiveAndRepeatARQ_Sender {
                 while (nextToSend < Math.min(winBase + winSize, N)) {
                     boolean isLast = (nextToSend == N - 1);
                     System.out.println("Sending packet: " + nextToSend);
+                    char index = (char)(nextToSend % 256);
+
                     if (isLast) {
-                        sender.sendPacket(packets.get(nextToSend).getPacket(),
-                                (char) nextToSend, true);
+                        sender.sendPacket(packets.get(nextToSend).getPacket(), index, true);
 
                     } else {
-                        sender.sendPacketWithLost(packets.get(nextToSend),
-                                (char) nextToSend, false);
+                        sender.sendPacketWithLost(packets.get(nextToSend), index, false);
                     }
 
 
@@ -67,19 +67,29 @@ public class SelectiveAndRepeatARQ_Sender {
                 int responseNum = (int) response[1];
 
 
+                //--------NOTE TO GEORGE (REMOVE) this is what i found to be a solution for this i think
+                //--------NOTE TO GEORGE (REMOVE) this is what i found to be a solution for this i think
+                //--------NOTE TO GEORGE (REMOVE) this is what i found to be a solution for this i think
 
+                int currentMod = winBase % 256;
+                int diff = (responseNum - currentMod + 256) % 256;
+                if (diff > 128) {
+                    continue;
+                }
                 if (responseType == ACK) {
                     System.out.println("ACK received, nextExpected=" + responseNum);
-                    int newBase = (responseNum == 0 && winBase > 0) ? N : responseNum;
-                    winBase = Math.max(winBase, newBase);
-
+                    winBase = winBase + diff;
 
                 } else if (responseType == NAK) {
+
                     System.out.println("NAK received for packet: " + responseNum);
-                    boolean isLast = (responseNum == N - 1);
-                    // NOTE: RESEND
-                    sender.sendPacket(packets.get(responseNum).getPacket(),
-                            (char) responseNum, isLast);
+                    int nakIndex = winBase + diff;
+                    // NOTE ---- checj
+                    if (nakIndex < N) {
+                        boolean isLast = (nakIndex == N - 1);
+                        System.out.println("Sender: Resending packet " + nakIndex);
+                        sender.sendPacket(packets.get(nakIndex).getPacket(), (char)responseNum, isLast);
+                    }
                 }
 
             } catch (IOException e) {

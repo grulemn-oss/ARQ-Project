@@ -1,6 +1,6 @@
 package protocols;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 
 public class BISYNCPacket {
     private static final byte SYN = 0x16;  // SYNC character
@@ -20,7 +20,6 @@ public class BISYNCPacket {
     public BISYNCPacket(byte[] data) {
         this(data, false); // call the second constructor with stuffed = false
     }
-
     // encapsulation
     public BISYNCPacket(byte[] data, boolean stuffed) {
         if (!stuffed) { // this is the raw data
@@ -30,7 +29,7 @@ public class BISYNCPacket {
             this.checksum = calculateChecksum();
             this.trailer = createTrailer();
             this.isValid = true;
-        } else { // this is the stuffed packet, unpacket it
+        }else{ // this is the stuffed packet, unpacket it
             isValid = this.fromPacket(data);
         }
     }
@@ -40,6 +39,7 @@ public class BISYNCPacket {
     // output : stuffed data
     // e.g. stuffed data has 8 bytes with 3 extra DLE: 0x01 DLE STX 0x02 DLE SYN DLE DLE
     private byte[] byteStuff(byte[] data) {
+        // TODO: Task 1.a, your code below
         int count = data.length;
 
         for (int i = 0; i < data.length; i++) {
@@ -53,9 +53,11 @@ public class BISYNCPacket {
 
         for (int i = 0; i < data.length; i++) {
             if (data[i] == SYN || data[i] == STX || data[i] == ETX || data[i] == DLE) {
-                stuffed[j++] = DLE;
+                stuffed[j] = DLE;
+                j++;
             }
-            stuffed[j++] = data[i];
+            stuffed[j] = data[i];
+            j++;
         }
 
         return stuffed;
@@ -66,8 +68,10 @@ public class BISYNCPacket {
     // output : raw data
     // e.g. raw data has 5 bytes with 3 special bytes: 0x01 STX 0x02 SYN DLE
     private byte[] byteUnstuff(byte[] stuffedData) {
+        // TODO: Task 1.b, your code below
         int count = stuffedData.length;
-        for (int i = 0; i < stuffedData.length - 1; i++) {
+
+        for (int i = 0; i < stuffedData.length; i++) {
             if (stuffedData[i] == DLE && (stuffedData[i + 1] == SYN || stuffedData[i + 1] == STX
                     || stuffedData[i + 1] == ETX || stuffedData[i + 1] == DLE)) {
                 count--;
@@ -78,7 +82,7 @@ public class BISYNCPacket {
         byte[] unstuffed = new byte[count];
         int j = 0;
 
-        for (int i = 0; i < stuffedData.length - 1; i++) {
+        for (int i = 0; i < stuffedData.length; i++) {
             if (stuffedData[i] == DLE && (stuffedData[i + 1] == SYN || stuffedData[i + 1] == STX
                     || stuffedData[i + 1] == ETX || stuffedData[i + 1] == DLE)) {
                 unstuffed[j] = stuffedData[i + 1];
@@ -97,14 +101,14 @@ public class BISYNCPacket {
         return new byte[]{SYN, SYN, STX};
     }
 
-    private byte[] getHeader(byte[] packet) {
+    private byte[] getHeader(byte[] packet){
         //
         byte[] header = new byte[3];
         System.arraycopy(packet, 0, header, 0, header.length);
         return header;
     }
 
-    private byte[] getTrailerAndSetChecksum(byte[] packet) {
+    private byte[] getTrailerAndSetChecksum(byte[] packet){
         // last three bytes: ETX + checksum
         byte[] trailer = new byte[3];
         trailer[0] = packet[packet.length - 3];
@@ -175,7 +179,7 @@ public class BISYNCPacket {
         this.header = getHeader(packet);
 
         // Verify trailer
-        if (packet[packet.length - 3] != ETX) {
+        if(packet[packet.length - 3] != ETX){
             // throw new IllegalArgumentException("Invalid trailer");
             return false;
         }
