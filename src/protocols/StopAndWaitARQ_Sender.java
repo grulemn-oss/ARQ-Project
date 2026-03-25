@@ -20,16 +20,22 @@ public class StopAndWaitARQ_Sender {
             boolean packetReceived = false;
             boolean isLastPacket = (i == packets.size() - 1);
 
-            // TODO: Task 2.a, Your code below
+            // DONE: Task 2.a, Your code below
             // notice: use sender.sendPacketWithError() to send out packet
             try {
                 while (!packetReceived) {
-                    System.out.println("sendPacket number: " + (int)(currSeqNumber));
-                    sender.sendPacketWithError(packet, currSeqNumber, isLastPacket);
-                    char[] response = sender.waitForResponse();
-                    packetReceived = ACK == (int)(response[0]);
-                    System.out.println("Packet " + i + " successfully transmitted ACK number: " + (int)(response[1]));
+                    System.out.println("frame: " + (int)(currSeqNumber)); // print out frame number
+                    sender.sendPacketWithError(packet, currSeqNumber, isLastPacket); // send packet
+                    char[] response = sender.waitForResponse(); // wait for ACK or NAK
+                    packetReceived = ACK == (int)(response[0]); // if ACK end while loop else loop again
+                    // print out received ACK or NAK and total packet number
+                    if (ACK == (int)(response[0])) {
+                        System.out.println("ACK: " + (int)(response[1]) + "\nPacket " + i + " successfully transmitted.");
+                    } else if (NAK == (int)(response[0])) {
+                        System.out.println("NAK: " + (int)(response[1]) + "\nPacket " + i + " unsuccessfully transmitted.");
+                    }
                 }
+                // After the ACK is received increment the frame number.
                 currSeqNumber = (char) (((int) (currSeqNumber) + 1) % 256);
             } catch (IOException e) {
                 System.err.println(e);

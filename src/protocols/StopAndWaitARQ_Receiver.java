@@ -54,12 +54,17 @@ public class StopAndWaitARQ_Receiver {
                 in.readFully(packetData);
                 BISYNCPacket packet = new BISYNCPacket(packetData, true);
 
-                // TODO: Task 2.b, Your code below
+                // DONE: Task 2.b, Your code below
+                // Checksum the packet, if it fails send an NAK without increasing the index
                 if (packet.isValid) {
+                    // Add room to receivedData
                     ensureCapacity(packetIndex);
+                    // Store the data at the correct index in receivedData
                     receivedData.set(packetIndex, packet.getData());
+                    // Send an ACK with an index 1 higher
                     out.writeChar(ACK);
                     out.writeChar((char)(((int)(packetIndex)+1)%256));
+                    // Check if the code should end ONLY if packet.isValid
                     if (isLastPacket) {
                         running = false;
                     }

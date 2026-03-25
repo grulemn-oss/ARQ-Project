@@ -39,18 +39,21 @@ public class BISYNCPacket {
     // output : stuffed data
     // e.g. stuffed data has 8 bytes with 3 extra DLE: 0x01 DLE STX 0x02 DLE SYN DLE DLE
     private byte[] byteStuff(byte[] data) {
-        // TODO: Task 1.a, your code below
+        // Store initial length in count
         int count = data.length;
 
+        // Increase count for every special character in data
         for (int i = 0; i < data.length; i++) {
             if (data[i] == SYN || data[i] == STX || data[i] == ETX || data[i] == DLE) {
                 count++;
             }
         }
 
+        // Create a new byte[] with length count, has room for DLEs. Initialize j.
         byte[] stuffed = new byte[count];
         int j = 0;
 
+        // Add a DLE to stuffed if there is a special character, then add the data value.
         for (int i = 0; i < data.length; i++) {
             if (data[i] == SYN || data[i] == STX || data[i] == ETX || data[i] == DLE) {
                 stuffed[j] = DLE;
@@ -68,20 +71,23 @@ public class BISYNCPacket {
     // output : raw data
     // e.g. raw data has 5 bytes with 3 special bytes: 0x01 STX 0x02 SYN DLE
     private byte[] byteUnstuff(byte[] stuffedData) {
-        // TODO: Task 1.b, your code below
+        // Store initial length in count
         int count = stuffedData.length;
 
+        // Decrease count for every special character in data proceeded by a DLE. Skip the next value if found.
         for (int i = 0; i < stuffedData.length; i++) {
             if (stuffedData[i] == DLE && (stuffedData[i + 1] == SYN || stuffedData[i + 1] == STX
                     || stuffedData[i + 1] == ETX || stuffedData[i + 1] == DLE)) {
                 count--;
-                i++;
+                i++; // This ensures DLE DLE DLE STX does not become STX but DLE STX
             }
         }
 
+        // Create a new byte[] with length count, has room for DLEs. Initialize j.
         byte[] unstuffed = new byte[count];
         int j = 0;
 
+        // Skip a DLE from stuffed if there is a special character following, then add the data value.
         for (int i = 0; i < stuffedData.length; i++) {
             if (stuffedData[i] == DLE && (stuffedData[i + 1] == SYN || stuffedData[i + 1] == STX
                     || stuffedData[i + 1] == ETX || stuffedData[i + 1] == DLE)) {
