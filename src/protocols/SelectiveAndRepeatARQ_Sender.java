@@ -1,3 +1,4 @@
+
 package protocols;
 
 
@@ -37,46 +38,65 @@ public class SelectiveAndRepeatARQ_Sender {
 
         Boolean finished = false;
 
-        // TODO: Task 3.a, Your code below
-        int currSeqNum = 0;
-        while (!finished) {
-            try {
-            // notice: use sender.sendPacketWithLost() to send out packet
-            // but, to resend the lost packet after receiving NAK,
-            // use sender.sendPacket(), otherwise, the receiver may not get the resent packet and get stuck
-            // also, for the last packet, use sender.sendPacket(), otherwise, it will get stuck
+//         TODO: Task 3.a, Your code below
+        int nextToSend = 0;
 
-                // Send unsent packets from window
-                for (int i = currSeqNum; i < Math.min(winSize + winBase, N); i++) {
-                    if (i == packets.size() - 1) {
-                        // Send immune last packet
-                        System.out.println("sendPacket number: " + i);
-                        currSeqNum = i;
-                        sender.sendPacket(packets.get(i).getPacket(), (char)(i), true);
+        while (winBase < N) { //vital
+            try {
+
+                while (nextToSend < Math.min(winBase + winSize, N)) {
+                    boolean isLast = (nextToSend == N - 1);
+                    System.out.println("Sending packet: " + nextToSend);
+                    char index = (char)(nextToSend % 256);
+
+                    if (isLast) {
+                        sender.sendPacket(packets.get(nextToSend).getPacket(), index, true);
+
                     } else {
-                        // Send non-immune packet
-                        System.out.println("sendPacket number: " + i);
-                        currSeqNum = i;
-                        sender.sendPacketWithLost(packets.get(i), (char)(i), false);
+                        sender.sendPacketWithLost(packets.get(nextToSend), index, false);
                     }
+
+
+
+                    nextToSend++;
                 }
-                // Check ACKs and NAKS and move window
+
+                // ALWAYS WAIT 4 RESp
                 response = sender.waitForResponse();
-                if (ACK == (int)(response[0])) {
-                    System.out.println("ACK: " + (int)(response[1]));
-                    winBase = (int)(response[1]);
-                    if (winBase == packets.size() - 1) {
-                        finished = true;
-                    }
-                } else if (NAK == (int)(response[0])) {
-                    System.out.println("sendPacket number: " + ((int)(response[1])-1) + " NAK: " + (int)(response[1]));
-                    sender.sendPacket(packets.get((int)(response[1])-1).getPacket(), (char)((int)(response[1])-1), false);
+                int responseType = (int) response[0];
+                int responseNum = (int) response[1];
+
+
+                //--------NOTE TO GEORGE (REMOVE) this is what i found to be a solution for this i think
+                //--------NOTE TO GEORGE (REMOVE) this is what i found to be a solution for this i think
+                //--------NOTE TO GEORGE (REMOVE) this is what i found to be a solution for this i think
+
+                int currentMod = winBase % 256;
+                int diff = (responseNum - currentMod + 256) % 256;
+                if (diff > 128) {
+                    continue;
                 }
-            }catch (IOException e){
+                if (responseType == ACK) {
+                    System.out.println("ACK received, nextExpected=" + responseNum);
+                    winBase = winBase + diff;
+
+                } else if (responseType == NAK) {
+
+                    System.out.println("NAK received for packet: " + responseNum);
+                    int nakIndex = winBase + diff;
+                    // NOTE ---- checj
+                    if (nakIndex < N) {
+                        boolean isLast = (nakIndex == N - 1);
+                        System.out.println("Sender: Resending packet " + nakIndex);
+                        sender.sendPacket(packets.get(nakIndex).getPacket(), (char)responseNum, isLast);
+                    }
+                }
+
+            } catch (IOException e) {
                 System.err.println("Error transmitting packet: " + e.getMessage());
                 return;
             }
         }
     }
-
 }
+ 

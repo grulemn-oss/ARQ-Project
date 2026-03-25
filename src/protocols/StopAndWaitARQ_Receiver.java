@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class StopAndWaitARQ_Receiver {
@@ -55,15 +56,16 @@ public class StopAndWaitARQ_Receiver {
 
                 // TODO: Task 2.b, Your code below
                 if (packet.isValid) {
-                    receivedData.add(packetData);
+                    ensureCapacity(packetIndex);
+                    receivedData.set(packetIndex, packet.getData());
                     out.writeChar(ACK);
                     out.writeChar((char)(((int)(packetIndex)+1)%256));
+                    if (isLastPacket) {
+                        running = false;
+                    }
                 } else {
                     out.writeChar(NAK);
                     out.writeChar((int)(packetIndex));
-                }
-                if (isLastPacket) {
-                    running = false;
                 }
             } catch (IOException e) {
                 if (running) {

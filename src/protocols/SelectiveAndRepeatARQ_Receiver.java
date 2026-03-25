@@ -77,33 +77,57 @@ public class SelectiveAndRepeatARQ_Receiver {
                 BISYNCPacket packet = new BISYNCPacket(packetData, true);
 
                 // TODO: Task 3.b, Your code below
-                if (winBase < (int)(packetIndex)) {
-                    for (int i = winBase + 1; i <= (int)(packetIndex); i++) {
-                        if (!nak_packets.contains(i)) {
-                            nak_packets.add(i);
-                            out.writeChar(NAK);
-                            out.writeChar(i);
-                            System.out.println("NAK " + i);
-                        }
-                        winBase++;
-                    }
-                } else {
-                    receivedData.add(packetData);
-                    winBase++;
+
+                //--------NOTE TO GEORGE (REMOVE) this is what i found to be a solution for this i think
+                //--------NOTE TO GEORGE (REMOVE) this is what i found to be a solution for this i think
+                //--------NOTE TO GEORGE (REMOVE) this is what i found to be a solution for this i think
+                int currentMod = winBase % 256;
+                int diff = (packetIndex - currentMod + 256) % 256;
+
+                if (diff > 128) {
+                    System.out.println("Ignoring delayed/duplicate packet: " + (int)packetIndex);
                     out.writeChar(ACK);
-                    out.writeChar((char)((winBase) % 256));
-                    System.out.println("ACK " + (winBase) % 256);
+                    out.writeChar((char) (winBase % 256));
+                    continue; // Skip
                 }
-                if (isLastPacket) {
+                int absoluteIndex = winBase + diff;
+
+                if (absoluteIndex < N && !flags[absoluteIndex]) {
+                    receivedData.set(absoluteIndex, packet.getData());
+                    flags[absoluteIndex] = true;
+                }
+
+                while (winBase < N && flags[winBase]) {
+                    winBase++;
+                }
+                if (absoluteIndex > winBase) {
+                    for (int m = winBase; m < absoluteIndex; m++) {
+                        if (!flags[m] && !nak_packets.contains(m)) {
+                            nak_packets.add(m);
+                            out.writeChar(NAK);
+                            out.writeChar((char) (m % 256));
+                            System.out.println("NAK " + (m % 256));
+                        }
+                    }
+                }
+
+                out.writeChar(ACK);
+                out.writeChar((char) (winBase % 256));
+                System.out.println("ACK " + (winBase % 256) + " (nextExpected=" + winBase + ")");
+
+                if (isLastPacket && winBase == N) {
                     running = false;
+                } else if (isLastPacket) {
+                    System.out.println("Last packet received but gaps remain; waiting for retransmissions.");
                 }
             } catch (IOException e) {
-                if (running) {
+                if (running && winBase < N) {
                     System.err.println("Error handling client: " + e.getMessage());
+                } else {
+                    running = false; // stop
                 }
             }
         }
-        // finish receiving all the data
         System.out.println("receiver: finish receiving all packets, now save into file!");
         saveFile();
         stop();
@@ -131,7 +155,7 @@ public class SelectiveAndRepeatARQ_Receiver {
             // saveBytesAsIntegers(completeFile, "mytest3.log");
             // Write to file
             Files.write(Paths.get(outputFile), completeFile);
-            System.out.println("Video file saved successfully: " + outputFile);
+            System.out.println("File saved successfully: " + outputFile);
         } catch (IOException e) {
             System.err.println("Error saving video file: " + e.getMessage());
         }
@@ -148,4 +172,3 @@ public class SelectiveAndRepeatARQ_Receiver {
         }
     }
 }
-
